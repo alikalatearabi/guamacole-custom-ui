@@ -4,6 +4,10 @@ import {Route, Routes} from "react-router-dom";
 import "primereact/resources/themes/lara-light-cyan/theme.css";
 import Layout from "./components/layout";
 import Active from "./pages/active";
+import History from "./pages/history";
+import Users from "./pages/users";
+import Groups from "./pages/groups";
+import Connections from "./pages/connections";
 
 
 function App() {
@@ -14,6 +18,10 @@ function App() {
                 <Routes>
                     <Route path={'/'}  element={<Dashboard />} />
                     <Route path={'/active'}  element={<Active />} />
+                    <Route path={'/history'}  element={<History />} />
+                    <Route path={'/users'}  element={<Users />} />
+                    <Route path={'/groups'}  element={<Groups />} />
+                    <Route path={'/connections'}  element={<Connections />} />
                 </Routes>
             </Layout>
         </div>

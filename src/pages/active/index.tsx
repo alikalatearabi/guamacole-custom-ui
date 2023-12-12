@@ -2,6 +2,8 @@ import React, {useState} from 'react';
 import {InputText} from "primereact/inputtext";
 import {CiFilter} from "react-icons/ci";
 import {Card} from "primereact/card";
+import { CiMonitor } from "react-icons/ci";
+
 
 
 const Active = () => {
@@ -40,14 +42,16 @@ const Active = () => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     marginLeft: '10px',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    background: 'white'
                 }}>
                     <CiFilter style={{fontSize: '25px'}}/>
                     <p>Filter</p>
                 </div>
             </div>
             <div style={{display: 'flex', alignItems: "center", marginTop: '20px', padding: '20px 30px'}}>
-                <Card title="Username" style={{width: '20%', marginRight: '10px'}}>
+                <Card title="Username" style={{width: '20%', marginRight: '10px', position: 'relative'}}>
+                    <CiMonitor style={{position: 'absolute', top:'5px', left: '5px', fontSize: '30px'}}/>
                     <div style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -69,7 +73,8 @@ const Active = () => {
                         <span>20 min</span>
                     </div>
                 </Card>
-                <Card title="Username" style={{width: '20%', marginRight: '10px'}}>
+                <Card title="Username" style={{width: '20%', marginRight: '10px', position: 'relative'}}>
+                    <CiMonitor style={{position: 'absolute', top:'5px', left: '5px', fontSize: '30px'}}/>
                     <div style={{
                         display: 'flex',
                         alignItems: 'center',

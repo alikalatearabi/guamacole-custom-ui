@@ -14,14 +14,15 @@ const Layout: React.FC<{ children: ReactNode }> = ({children}) => {
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    background: '#DDF1F8'
                 }}
             >
                 <MegaMenu
                     model={items}
                     orientation="vertical"
                     breakpoint="767px"
-                    style={{width: '100%', height: '100%'}}
+                    style={{width: '100%', height: '100%', borderRadius: '0'}}
                 />
                 <div style={{
                     display: 'flex',
@@ -31,14 +32,15 @@ const Layout: React.FC<{ children: ReactNode }> = ({children}) => {
                     padding: '0 20px',
                     margin: '5px auto',
                     border: '1px solid #e5e7eb',
-                    borderRadius: '5px'
+                    borderRadius: '0',
+                    background: 'white'
 
                 }}>
                     <IoIosSettings style={{fontSize: '25px'}}/>
                     <p>Bakhshande</p>
                 </div>
             </div>
-            <div style={{width: '80%', height: '100%'}}>
+            <div style={{width: '80%', height: '100%', background: '#DDF1F8', padding: '10px'}}>
                 {children}
             </div>
         </div>
