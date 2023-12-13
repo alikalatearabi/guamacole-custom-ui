@@ -8,6 +8,8 @@ import History from "./pages/history";
 import Users from "./pages/users";
 import Groups from "./pages/groups";
 import Connections from "./pages/connections";
+import 'primeicons/primeicons.css';
+import Login from "./pages/login";
 
 
 function App() {
@@ -17,6 +19,7 @@ function App() {
             <Layout>
                 <Routes>
                     <Route path={'/'}  element={<Dashboard />} />
+                    <Route path={'/login'}  element={<Login />} />
                     <Route path={'/active'}  element={<Active />} />
                     <Route path={'/history'}  element={<History />} />
                     <Route path={'/users'}  element={<Users />} />

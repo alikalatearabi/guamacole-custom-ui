@@ -1,35 +1,80 @@
 import React, {useEffect, useState} from 'react';
 import {DataTable} from 'primereact/datatable';
 import {Column} from 'primereact/column';
-import {usersData} from "./userMockData.ts";
 import {FaUserAlt} from "react-icons/fa";
 import {FaPlus} from "react-icons/fa";
 import {InputText} from "primereact/inputtext";
+import {fetchUsersApi} from "../../api/api.ts";
+import EditUsersModal from "./editUsersModal.tsx";
 
 
-interface Users {
+export interface UsersData {
     username: string,
-    last_active: string
+    lastActive: string,
+    attributes: {
+        "access-window-end": string,
+        "access-window-start": string,
+        disabled: string,
+        expired: string,
+        "guac-email-address": string,
+        "guac-full-name": string,
+        "guac-organization": string,
+        "guac-organizational-role": string,
+        timezone: string,
+        "valid-from": string,
+        "valid-until": string
+    }
 }
 
 const Users = () => {
 
     const [filter, setFilter] = useState('')
-    const [users, setUsers] = useState<{
-        username: string,
-        last_active: string
-    }[]>([]);
+    const [users, setUsers] = useState<UsersData[]>([]);
+    const [filteredUsers, setFilteredUsers] = useState<UsersData[]>([]);
+    const [editUserModal, setEditUserModal] = useState<boolean>(false)
+    const [modalId, setModalId] = useState('')
+
+    const unixToUTC = (unix: string) => {
+        if (unix) {
+            const date = new Date(unix)
+            return date.toUTCString()
+        } else return '----'
+
+    }
 
     useEffect(() => {
-        setUsers(usersData)
+        const getAllUsers = async () => {
+            const res = await fetchUsersApi()
+            if (Object.keys(res.data)) {
+                setUsers(Object.keys(res.data).map(key => ({
+                    username: key,
+                    lastActive: unixToUTC(res.data[key].lastActive),
+                    attributes: res.data[key].attributes
+                })))
+            }
+        }
+        getAllUsers().then()
     }, []);
 
-    const userBodyTemplate = (rowData: Users) => {
+    useEffect(() => {
+        if (filter !== '') {
+            const filtered = users.filter(user => user.username.includes(filter))
+            setFilteredUsers(filtered)
+        } else setFilteredUsers([])
+    }, [filter]);
+
+    const userBodyTemplate = (rowData: UsersData) => {
         return (
             <div>
                 <div className="flex align-items-center gap-2">
                     <FaUserAlt style={{marginRight: '10px', transform: 'translateY(1.5px)'}}/>
-                    <span style={{fontSize: '17px'}}>{rowData.username}</span>
+                    <span
+                        style={{fontSize: '17px', cursor: 'pointer'}}
+                        onClick={() => {
+                            setEditUserModal(true);
+                            setModalId(rowData.username)
+                        }}
+                    >{rowData.username}</span>
                 </div>
             </div>
         )
@@ -79,10 +124,19 @@ const Users = () => {
                 fontWeight: 'bold'
             }}>Users</p>
             <div className="card">
-                <DataTable value={users} tableStyle={{minWidth: '50rem'}} header={header} style={{padding: '0 30px'}}>
-                    <Column field="username" header="username" body={userBodyTemplate}></Column>
-                    <Column field="last_active" header="last_active"></Column>
+                <DataTable value={filteredUsers.length ? filteredUsers : users} tableStyle={{minWidth: '50rem'}}
+                           header={header} style={{padding: '0 30px'}}>
+                    <Column
+                        field="username"
+                        header="username"
+                        body={userBodyTemplate}
+                    ></Column>
+                    <Column field="lastActive" header="last active"></Column>
                 </DataTable>
+                <EditUsersModal
+                    setModal={setEditUserModal}
+                    modal={editUserModal}
+                    data={users.find(user => user.username === modalId)}/>
             </div>
         </>
     );
