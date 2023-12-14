@@ -18,6 +18,13 @@ export const fetchUsersApi = () =>{
         }
     })
 }
+export const fetchUsersAttributesAPI = (user: string | undefined) =>{
+    return axios.get(`http://localhost:8080/api/session/data/postgresql/users/${user}`, {
+        params: {
+            "token": localStorage.getItem("token")
+        }
+    })
+}
 
 export const fetchRecentConnections = () => {
     return []
