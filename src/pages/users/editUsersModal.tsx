@@ -6,8 +6,10 @@ import {Accordion, AccordionTab} from "primereact/accordion";
 import {Checkbox} from 'primereact/checkbox';
 import {Calendar} from "primereact/calendar";
 import DatePicker, {DateObject} from "react-multi-date-picker";
+import persian from "react-date-object/calendars/persian"
 import persian_fa from "react-date-object/locales/persian_fa"
 import {Button} from "primereact/button";
+import {GrPowerReset} from "react-icons/gr";
 import {fetchUsersAttributesAPI} from "../../api/api.ts";
 
 
@@ -23,7 +25,7 @@ const EditUsersModal: React.FC<EditUserModalProps> = ({setModal, modal, data}) =
         enableAfter?: DateObject | DateObject[] | null,
         disableAfter?: DateObject | DateObject[] | null,
         allowAccessAfter?: Date | null,
-        disableAccessAfter?: Date | undefined
+        disableAccessAfter?: Date | null
         disabled?: boolean
         expired?: boolean
         administrator?: boolean,
@@ -38,8 +40,40 @@ const EditUsersModal: React.FC<EditUserModalProps> = ({setModal, modal, data}) =
     useEffect(() => {
         if (data?.attributes.disabled === "true") setPermissions({...permissions, disabled: true})
         if (data?.attributes.expired === "true") setPermissions({...permissions, expired: true})
-        // if (data?.attributes['access-window-end']) setPermissions({...permissions, allowAccessAfter: })
-        console.log()
+        if (data?.attributes["access-window-start"]) {
+            const timeString = data?.attributes["access-window-start"];
+            const currentDateEnable = new Date();
+            const timeParts = timeString?.split(":");
+            if (timeParts) {
+                const hours = parseInt(timeParts[0], 10);
+                const minutes = parseInt(timeParts[1], 10);
+                const seconds = parseInt(timeParts[2], 10);
+                currentDateEnable.setHours(hours);
+                currentDateEnable.setMinutes(minutes);
+                currentDateEnable.setSeconds(seconds);
+                setPermissions({...permissions, allowAccessAfter: currentDateEnable})
+            }
+        }
+        if (data?.attributes["access-window-end"]) {
+            const timeString = data?.attributes["access-window-end"];
+            const currentDateDisable = new Date();
+            const timeParts = timeString?.split(":");
+            if (timeParts) {
+                const hours = parseInt(timeParts[0], 10);
+                const minutes = parseInt(timeParts[1], 10);
+                const seconds = parseInt(timeParts[2], 10);
+                currentDateDisable.setHours(hours);
+                currentDateDisable.setMinutes(minutes);
+                currentDateDisable.setSeconds(seconds);
+                setPermissions({...permissions, disableAccessAfter: currentDateDisable})
+            }
+        }
+        if (data?.attributes["valid-from"]) {
+            const dateString = data?.attributes["valid-from"]
+            const dateObject =  new Date(dateString)
+            setPermissions({...permissions, enableAfter: dateObject as unknown as DateObject})
+        }
+        console.log(data)
     }, [data]);
 
 
@@ -132,91 +166,81 @@ const EditUsersModal: React.FC<EditUserModalProps> = ({setModal, modal, data}) =
                                 fontSize: '15px',
                                 color: '#808080'
                             }}>Allow Access After</span>
-                            <Calendar
-                                value={permissions.allowAccessAfter}
-                                onChange={(e) => setPermissions({
-                                    ...permissions,
-                                    allowAccessAfter: e.value ? e.value : null
-                                })}
-                                timeOnly
-                                style={{height: '35px'}}
-                            />
+                            <div style={{display: 'flex', alignItems: "center"}}>
+                                <Calendar
+                                    value={permissions.allowAccessAfter}
+                                    onChange={(e) => setPermissions({
+                                        ...permissions,
+                                        allowAccessAfter: e.value
+                                    })}
+                                    timeOnly
+                                    style={{height: '35px'}}
+                                />
+                                <div
+                                    style={{transform: 'translateX(-25px)', cursor: 'pointer'}}
+                                    onClick={() => setPermissions({...permissions, allowAccessAfter: null})}
+                                >
+                                    <GrPowerReset/>
+                                </div>
+                            </div>
                         </div>
                         <div style={{width: '24%'}}>
                             <span style={{marginBottom: '10px', fontSize: '15px', color: '#808080'}}>Do Not Allow Access After</span>
-                            <Calendar
-                                value={permissions.allowAccessAfter}
-                                onChange={(e) => setPermissions({
-                                    ...permissions,
-                                    allowAccessAfter: e.value ? e.value : undefined
-                                })}
-                                timeOnly
-                                style={{height: '35px'}}
-                            />
+                            <div style={{display: 'flex', alignItems: "center"}}>
+                                <Calendar
+                                    value={permissions.disableAccessAfter}
+                                    onChange={(e) => setPermissions({
+                                        ...permissions,
+                                        disableAccessAfter: e.value
+                                    })}
+                                    timeOnly
+                                    style={{height: '35px'}}
+                                />
+                                <div
+                                    style={{transform: 'translateX(-25px)', cursor: 'pointer'}}
+                                    onClick={() => setPermissions({...permissions, disableAccessAfter: null})}
+                                >
+                                    <GrPowerReset/>
+                                </div>
+                            </div>
                         </div>
                         <div style={{width: '24%'}}>
                             <span style={{marginBottom: '10px', fontSize: '15px', color: '#808080'}}>Enable Account After</span>
-                            <DatePicker
-                                value={permissions.enableAfter}
-                                onChange={(value) => setPermissions({...permissions, enableAfter: value})}
-                                style={{height: '35px', width: '100%'}}
-                                containerStyle={{display: 'block', fontSize: '15px'}}
-                                locale={persian_fa}
-                            >
-                                <div style={{
-                                    width: '100%',
-                                    display: 'flex',
-                                    alignItems: "center",
-                                    justifyContent: 'space-between'
-                                }}>
-                                    <Button
-                                        style={{
-                                            margin: "10px auto",
-                                            height: '30px',
-                                            width: '80%',
-                                            fontFamily: 'serif',
-                                            display: 'flex',
-                                            alignItems: "center",
-                                            justifyContent: "center"
-                                        }}
-                                        onClick={() => setPermissions({...permissions, enableAfter: null})}
-                                    >
-                                        لغو انتخاب
-                                    </Button>
+                            <div style={{display: 'flex', alignItems: "center"}}>
+                                <DatePicker
+                                    value={permissions.enableAfter}
+                                    onChange={(value) => setPermissions({...permissions, enableAfter: value})}
+                                    style={{height: '35px', width: '100%', fontFamily: 'vazir'}}
+                                    containerStyle={{display: 'block', fontSize: '15px', fontFamily: 'vazir'}}
+                                    calendar={persian}
+                                    locale={persian_fa}
+                                ></DatePicker>
+                                <div
+                                    style={{transform: 'translateX(-25px)', cursor: 'pointer'}}
+                                    onClick={() => setPermissions({...permissions, enableAfter: undefined})}
+                                >
+                                    <GrPowerReset/>
                                 </div>
-                            </DatePicker>
+                            </div>
                         </div>
                         <div style={{width: '24%'}}>
                             <span style={{marginBottom: '10px', fontSize: '15px', color: '#808080'}}>Disable Account After</span>
-                            <DatePicker
-                                value={permissions.disableAfter}
-                                onChange={(value) => setPermissions({...permissions, disableAfter: value})}
-                                style={{height: '35px', width: '100%'}}
-                                containerStyle={{display: 'block', fontSize: '15px'}}
-                                locale={persian_fa}
-                            >
-                                <div style={{
-                                    width: '100%',
-                                    display: 'flex',
-                                    alignItems: "center",
-                                    justifyContent: 'space-between'
-                                }}>
-                                    <Button
-                                        style={{
-                                            margin: "10px auto",
-                                            height: '30px',
-                                            width: '80%',
-                                            fontFamily: 'serif',
-                                            display: 'flex',
-                                            alignItems: "center",
-                                            justifyContent: "center"
-                                        }}
-                                        onClick={() => setPermissions({...permissions, disableAfter: null})}
-                                    >
-                                        لغو انتخاب
-                                    </Button>
+                            <div style={{display: 'flex', alignItems: "center"}}>
+                                <DatePicker
+                                    value={permissions.disableAfter}
+                                    onChange={(value) => setPermissions({...permissions, disableAfter: value})}
+                                    style={{height: '35px', width: '100%', fontFamily: 'vazir'}}
+                                    containerStyle={{display: 'block', fontSize: '15px', fontFamily: 'vazir'}}
+                                    calendar={persian}
+                                    locale={persian_fa}
+                                ></DatePicker>
+                                <div
+                                    style={{transform: 'translateX(-25px)', cursor: 'pointer'}}
+                                    onClick={() => setPermissions({...permissions, disableAfter: undefined})}
+                                >
+                                    <GrPowerReset/>
                                 </div>
-                            </DatePicker>
+                            </div>
                         </div>
                     </div>
                     <div style={{
