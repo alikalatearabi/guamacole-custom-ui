@@ -9,14 +9,13 @@ import DatePicker, {DateObject} from "react-multi-date-picker";
 import persian from "react-date-object/calendars/persian"
 import persian_fa from "react-date-object/locales/persian_fa"
 import {GrPowerReset} from "react-icons/gr";
-import {fetchUsersPermissionsAPI, patchUserPermissions, postUsersEditAttributes} from "../../api/api.ts";
+import {addUserApi, fetchUsersPermissionsAPI, patchUserPermissions, postUsersEditAttributes} from "../../api/api.ts";
 import {Button} from "primereact/button";
 import {Toast} from 'primereact/toast';
 
-interface EditUserModalProps {
+interface AddUserModalProps {
     setModal: (value: boolean) => void,
     modal: boolean,
-    data: UsersData | undefined,
 }
 
 interface PermissionsType {
@@ -56,7 +55,7 @@ const strToDate = (dateString: string) => {
     }
 }
 
-const EditUsersModal: React.FC<EditUserModalProps> = ({setModal, modal, data}) => {
+const AddUsersModal: React.FC<AddUserModalProps> = ({setModal, modal}) => {
 
     const toast = useRef<Toast>(null);
 
@@ -66,129 +65,27 @@ const EditUsersModal: React.FC<EditUserModalProps> = ({setModal, modal, data}) =
     const showSuccess = () => {
         toast.current?.show({severity: 'success', summary: 'Success', detail: 'Successful', life: 1500});
     }
-    const fetchUsersAccessPermissions = async (): Promise<string[]> => {
-        const res = await fetchUsersPermissionsAPI(data?.username)
-        if (res.status === 200) {
-            setInitialPermissionArr(res.data.systemPermissions)
-            return res.data.systemPermissions
-        } else return []
-    }
 
-    useEffect(() => {
-        const permissionObj: PermissionsType = {}
-        if (data) {
-            fetchUsersAccessPermissions().then(res => {
-                if (data.username) {
-                    permissionObj.username = data.username
-                }
-                if (res.includes("ADMINISTER")) {
-                    permissionObj.ADMINISTER = true
-                }
-                if (res.includes("CREATE_USER")) {
-                    permissionObj.CREATE_USER = true
-                }
-                if (res.includes("CREATE_USER_GROUP")) {
-                    permissionObj.CREATE_USER_GROUP = true
-                }
-                if (res.includes("CREATE_CONNECTION")) {
-                    permissionObj.CREATE_CONNECTION = true
-                }
-                if (res.includes("CREATE_CONNECTION_GROUP")) {
-                    permissionObj.CREATE_CONNECTION_GROUP = true
-                }
-                if (res.includes("CREATE_SHARING_PROFILE")) {
-                    permissionObj.CREATE_SHARING_PROFILE = true
-                }
-                if (data.attributes["access-window-start"]) {
-                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                    // @ts-expect-error
-                    permissionObj["access-window-start"] = strToDate(data.attributes["access-window-start"])
-                }
-                if (data.attributes["access-window-end"]) {
-                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                    // @ts-expect-error
-                    permissionObj["access-window-end"] = strToDate(data.attributes["access-window-end"])
-                }
-                if (data.attributes["valid-from"]) {
-                    permissionObj["valid-from"] = new Date(data.attributes["valid-from"]).toISOString().split('T')[0] as unknown as DateObject
-                }
-                if (data.attributes["valid-until"]) {
-                    permissionObj["valid-until"] = new Date(data.attributes["valid-until"]).toISOString().split('T')[0] as unknown as DateObject
-                }
-                if (data.attributes["guac-full-name"]) {
-                    permissionObj["guac-full-name"] = data.attributes["guac-full-name"]
-                }
-                if (data.attributes["guac-email-address"]) {
-                    permissionObj["guac-email-address"] = data.attributes["guac-email-address"]
-                }
-                if (data.attributes.disabled === "true") {
-                    permissionObj.disabled = true
-                }
-                setPermissions(permissionObj)
-            })
-
-        }
-    }, [data]);
-
-    const handleEditUser = async () => {
-        const permArr: { op: string, path: string, value: string }[] = []
-        const attrData = {
-            attributes: {
-                "access-window-end": permissions["access-window-end"] || null,
-                "access-window-start": permissions["access-window-start"] || null,
-                "guac-full-name": permissions["guac-full-name"] || null,
-                "guac-email-address": permissions["guac-email-address"] || null,
-                "guac-organization": permissions["guac-organization"] || null,
-                "guac-organizational-role": permissions["guac-organizational-role"] || null,
-                "valid-from": permissions["valid-from"] || null,
-                "valid-until": permissions["valid-until"] || null,
-                "disabled": permissions.disabled || "",
-                "expired": permissions.expired || "",
-                "timezone": null
-            },
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-expect-error
-            lastActive: new Date(data?.lastActive).valueOf(),
+    const handleAddUser = async () => {
+        const data = {
+            username: permissions.username,
             password: permissions.password,
-            username: permissions.username || data?.username
+            "attributes": {
+                "disabled": permissions.disabled,
+                "expired": permissions.expired,
+                "access-window-start": permissions["access-window-start"],
+                "access-window-end": permissions["access-window-end"],
+                "valid-from": permissions["valid-from"],
+                "valid-until": permissions["valid-until"],
+                "timezone": null,
+                "guac-full-name": permissions["guac-full-name"],
+                "guac-organization": permissions["guac-organization"],
+                "guac-organizational-role": permissions["guac-organizational-role"]
+            }
         }
-        const res = await postUsersEditAttributes(data?.username, attrData)
-
-        if (!permissions.ADMINISTER && initialPermissionArr.includes("ADMINISTER")) {
-            permArr.push({op: "remove", path: '/systemPermissions', value: "ADMINISTER"})
-        } else if (permissions.ADMINISTER && !initialPermissionArr.includes("ADMINISTER")) {
-            permArr.push({op: "add", path: '/systemPermissions', value: "ADMINISTER"})
-        }
-        if (!permissions.CREATE_USER && initialPermissionArr.includes("CREATE_USER")) {
-            permArr.push({op: "remove", path: '/systemPermissions', value: "CREATE_USER"})
-        } else if (permissions.CREATE_USER && !initialPermissionArr.includes("CREATE_USER")) {
-            permArr.push({op: "add", path: '/systemPermissions', value: "CREATE_USER"})
-        }
-        if (!permissions.CREATE_USER_GROUP && initialPermissionArr.includes("CREATE_USER_GROUP")) {
-            permArr.push({op: "remove", path: '/systemPermissions', value: "CREATE_USER_GROUP"})
-        } else if (permissions.CREATE_USER_GROUP && !initialPermissionArr.includes("CREATE_USER_GROUP")) {
-            permArr.push({op: "add", path: '/systemPermissions', value: "CREATE_USER_GROUP"})
-        }
-        if (!permissions.CREATE_CONNECTION_GROUP && initialPermissionArr.includes("CREATE_CONNECTION_GROUP")) {
-            permArr.push({op: "remove", path: '/systemPermissions', value: "CREATE_CONNECTION_GROUP"})
-        } else if (permissions.CREATE_CONNECTION_GROUP && !initialPermissionArr.includes("CREATE_CONNECTION_GROUP")) {
-            permArr.push({op: "add", path: '/systemPermissions', value: "CREATE_CONNECTION_GROUP"})
-        }
-        if (!permissions.CREATE_SHARING_PROFILE && initialPermissionArr.includes("CREATE_SHARING_PROFILE")) {
-            permArr.push({op: "remove", path: '/systemPermissions', value: "CREATE_SHARING_PROFILE"})
-        } else if (permissions.CREATE_SHARING_PROFILE && !initialPermissionArr.includes("CREATE_SHARING_PROFILE")) {
-            permArr.push({op: "add", path: '/systemPermissions', value: "CREATE_SHARING_PROFILE"})
-        }
-        if (!permissions.CREATE_CONNECTION && initialPermissionArr.includes("CREATE_CONNECTION")) {
-            permArr.push({op: "remove", path: '/systemPermissions', value: "CREATE_CONNECTION"})
-        } else if (permissions.CREATE_CONNECTION && !initialPermissionArr.includes("CREATE_CONNECTION")) {
-            permArr.push({op: "add", path: '/systemPermissions', value: "CREATE_CONNECTION"})
-        }
-        const permRes = await patchUserPermissions(data?.username, permArr)
-
-        if (res.status === 204 && permRes.status === 204) showSuccess()
+        const res = await addUserApi(data)
+        console.log(res)
     }
-
 
     return (
         <Dialog
@@ -474,21 +371,23 @@ const EditUsersModal: React.FC<EditUserModalProps> = ({setModal, modal, data}) =
             </Accordion>
             <div
                 style={{display: 'flex', alignItems: "center", justifyContent: "center", marginTop: '20px'}}
-                onClick={() => handleEditUser()}
             >
-                <Button style={{
-                    fontFamily: 'vazir',
-                    margin: 'auto',
-                    width: '20%',
-                    display: 'flex',
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: '18px'
-                }}>ثبت تغییرات</Button>
+                <Button
+                    style={{
+                        fontFamily: 'vazir',
+                        margin: 'auto',
+                        width: '20%',
+                        display: 'flex',
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: '18px'
+                    }}
+                    onClick={() => handleAddUser()}
+                >Add User</Button>
             </div>
         </Dialog>
 
     );
 };
 
-export default EditUsersModal;
+export default AddUsersModal;

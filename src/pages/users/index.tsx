@@ -6,6 +6,7 @@ import {FaPlus} from "react-icons/fa";
 import {InputText} from "primereact/inputtext";
 import {fetchUsersApi} from "../../api/api.ts";
 import EditUsersModal from "./editUsersModal.tsx";
+import AddUserModal from "./addUserModal.tsx";
 
 
 export interface UsersData {
@@ -32,6 +33,7 @@ const Users = () => {
     const [users, setUsers] = useState<UsersData[]>([]);
     const [filteredUsers, setFilteredUsers] = useState<UsersData[]>([]);
     const [editUserModal, setEditUserModal] = useState<boolean>(false)
+    const [addUserModal, setAddEditUserModal] = useState<boolean>(false)
     const [modalId, setModalId] = useState('')
 
     const unixToUTC = (unix: string) => {
@@ -82,17 +84,20 @@ const Users = () => {
 
     const header = () => {
         return <div style={{display: 'flex', alignItems: "center", justifyContent: 'space-between', width: '100%'}}>
-            <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                width: '10%',
-                background: '#DDF1F8',
-                padding: '5px 20px',
-                borderRadius: '5px',
-                boxShadow: '0 1px 2px #cacaca',
-                cursor: 'pointer'
-            }}>
+            <div
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    width: '10%',
+                    background: '#DDF1F8',
+                    padding: '5px 20px',
+                    borderRadius: '5px',
+                    boxShadow: '0 1px 2px #cacaca',
+                    cursor: 'pointer'
+                }}
+                onClick={() => setAddEditUserModal(true)}
+            >
                 <FaPlus/>
                 <p style={{margin: '0'}}>Add User</p>
             </div>
@@ -136,7 +141,9 @@ const Users = () => {
                 <EditUsersModal
                     setModal={setEditUserModal}
                     modal={editUserModal}
-                    data={users.find(user => user.username === modalId)}/>
+                    data={users.find(user => user.username === modalId)}
+                />
+                <AddUserModal modal={addUserModal} setModal={setAddEditUserModal} />
             </div>
         </>
     );
