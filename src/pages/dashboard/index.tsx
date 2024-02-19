@@ -63,7 +63,7 @@ const Dashboard = () => {
                     </Link>}
                 </AccordionTab>
                 <AccordionTab header="All Connections">
-                    {Object.keys(listConnections).length > 0 ? Object.keys(listConnections).map(connection =>
+                    {listConnections && Object.keys(listConnections).length > 0 ? Object.keys(listConnections).map(connection =>
                         <ConnectionItem
                             key={connection}
                             to={`/panel/terminal/${listConnections[connection].name}/${listConnections[connection].identifier}`}
