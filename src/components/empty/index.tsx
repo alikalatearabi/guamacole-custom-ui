@@ -1,5 +1,4 @@
 import {CiFileOff} from "react-icons/ci";
-
 const Empty = () => {
     return (
         <div>

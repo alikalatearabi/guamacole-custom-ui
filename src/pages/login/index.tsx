@@ -1,10 +1,10 @@
-import React, {useState} from 'react';
+import {useState} from 'react';
 import {Card} from "primereact/card";
 import {InputText} from "primereact/inputtext";
 import {Button} from "primereact/button";
 import {loginApi} from "../../api/api.ts";
 import {useNavigate} from "react-router-dom";
-
+import './login.css'
 
 const Login = () => {
 
@@ -14,19 +14,25 @@ const Login = () => {
     const [password, setPassword] = useState('')
 
     const handleLogin = () => {
-        const login = async () => {
-            const res = await loginApi(username, password)
-            if (res.data.authToken) {
-                localStorage.setItem('token', res.data.authToken)
-                navigate('/')
+        try{
+            const login = async () => {
+                const res = await loginApi(username, password)
+                if (res.data.authToken) {
+                    localStorage.setItem('token', res.data.authToken)
+                    navigate('/panel/dashboard')
+                }
             }
+            if (username !== '' && password !== '') login().then()
+        } catch (error: any) {
+            console.log(error)
         }
-        if (username !== '' && password !== '') login().then()
     }
 
     return (
-        <div style={{display: 'flex', alignItems: "center", justifyContent: 'center', height: '100%'}}>
-            <Card title={"سامانه جامع مدیریت سرورها"} style={{width: '300px', margin: 'auto'}}>
+        <div style={{display: 'flex', alignItems: "center", justifyContent: 'space-between', height: '100%'}}>
+            <div className={'sidebg'}>
+            </div>
+            <Card title={"سامانه جامع مدیریت سرور"} style={{width: '300px', margin: 'auto'}}>
                 <InputText
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}

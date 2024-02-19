@@ -146,8 +146,7 @@ const EditUsersModal: React.FC<EditUserModalProps> = ({setModal, modal, data}) =
                 "expired": permissions.expired || "",
                 "timezone": null
             },
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-expect-error
+            // @ts-ignore
             lastActive: new Date(data?.lastActive).valueOf(),
             password: permissions.password,
             username: permissions.username || data?.username

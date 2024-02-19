@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import {useEffect, useState} from 'react';
 import {DataTable} from 'primereact/datatable';
 import {Column} from 'primereact/column';
 import {FaUserAlt} from "react-icons/fa";
@@ -7,7 +7,17 @@ import {InputText} from "primereact/inputtext";
 import {fetchUsersApi} from "../../api/api.ts";
 import EditUsersModal from "./editUsersModal.tsx";
 import AddUserModal from "./addUserModal.tsx";
+import styled from "styled-components";
 
+const CustomDataTable = styled(DataTable)`
+  .p-datatable-wrapper {
+    border-radius: 0 0 10px 10px;
+  }
+
+  .p-datatable-header {
+    border-radius: 10px 10px 0 0;
+  }
+`
 
 export interface UsersData {
     username: string,
@@ -129,21 +139,20 @@ const Users = () => {
                 fontWeight: 'bold'
             }}>Users</p>
             <div className="card">
-                <DataTable value={filteredUsers.length ? filteredUsers : users} tableStyle={{minWidth: '50rem'}}
-                           header={header} style={{padding: '0 30px'}}>
-                    <Column
-                        field="username"
-                        header="username"
-                        body={userBodyTemplate}
-                    ></Column>
+                <CustomDataTable
+                    value={filteredUsers.length ? filteredUsers : users}
+                    tableStyle={{minWidth: '50rem'}}
+                    header={header} style={{padding: '0 30px'}}
+                >
+                    <Column field="username" header="username" body={userBodyTemplate}></Column>
                     <Column field="lastActive" header="last active"></Column>
-                </DataTable>
+                </CustomDataTable>
                 <EditUsersModal
                     setModal={setEditUserModal}
                     modal={editUserModal}
                     data={users.find(user => user.username === modalId)}
                 />
-                <AddUserModal modal={addUserModal} setModal={setAddEditUserModal} />
+                <AddUserModal modal={addUserModal} setModal={setAddEditUserModal}/>
             </div>
         </>
     );

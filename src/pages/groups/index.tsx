@@ -1,11 +1,41 @@
-import React, {useEffect, useState} from 'react';
+import {useEffect, useState} from 'react';
 import {DataTable} from 'primereact/datatable';
 import {Column} from 'primereact/column';
-import {groupsData} from "./groupsMockData.ts";
 import {FaUserAlt} from "react-icons/fa";
 import {FaPlus} from "react-icons/fa";
 import {InputText} from "primereact/inputtext";
+import styled from 'styled-components'
+import {fetchGroupApi} from "../../api/api.ts";
+import GroupModal from "./addGroupModal.tsx";
 
+const HeaderWrapper = styled('div')`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%
+`
+const AddDiv = styled('div')`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 12%;
+  background: #DDF1F8;
+  padding: 5px 20px;
+  border-radius: 5px;
+  box-shadow: 0 1px 2px #cacaca;
+  cursor: pointer;
+
+  p {
+    margin: 0
+  }
+`
+const PageHeaderParagraph = styled('p')`
+  width: 100%;
+  text-align: left;
+  padding: 0 30px;
+  font-size: 30px;
+  font-weight: bold
+`
 
 interface Group {
     username: string,
@@ -13,72 +43,77 @@ interface Group {
 
 const Groups = () => {
 
-    const [filter, setFilter] = useState('')
+    const [detailedModal, setDetailedModal] = useState<string>('')
+    // const [filter, setFilter] = useState('')
     const [groups, setGroups] = useState<Group[]>([]);
+    const [showAddGroupModal, setShowAddGroupModal] = useState(false)
+    const [addGroupData, setAddGroupData] = useState({
+        name: '',
+        disable: false,
+        admin: false,
+        addUser: false,
+        addGroup: false,
+        addConnection: false,
+        addConnectionGroup: false,
+        addSharingProfile: false
+    })
 
-    useEffect(() => {
-        setGroups(groupsData)
-    }, []);
+    const getGroupsApi = async () => {
+        const res = await fetchGroupApi()
+        if (res.status === 200) {
+            const data = Object.keys(res.data).map(item => ({username: item}))
+            setGroups(data)
+        }
+    }
+
+    const handleClickUsername =  (rowData: {username: string}) =>{
+        setDetailedModal(rowData.username)
+        setShowAddGroupModal(true)
+    }
 
     const userBodyTemplate = (rowData: Group) => {
         return (
-            <div>
-                <div className="flex align-items-center gap-2">
+            <div onClick={() => {handleClickUsername(rowData)}}>
+                <div style={{cursor: 'pointer'}}>
                     <FaUserAlt style={{marginRight: '10px', transform: 'translateY(1.5px)'}}/>
                     <span style={{fontSize: '17px'}}>{rowData.username}</span>
                 </div>
             </div>
         )
     }
-
     const header = () => {
-        return <div style={{display: 'flex', alignItems: "center", justifyContent: 'space-between', width: '100%'}}>
-            <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                width: '10%',
-                background: '#DDF1F8',
-                padding: '5px 20px',
-                borderRadius: '5px',
-                boxShadow: '0 1px 2px #cacaca',
-                cursor: 'pointer'
+        return <HeaderWrapper>
+            <AddDiv onClick={() => {
+                setDetailedModal('')
+                setShowAddGroupModal(true)
             }}>
                 <FaPlus/>
-                <p style={{margin: '0'}}>Add Group</p>
-            </div>
-            <div style={{
-                width: '90%',
-                padding: '10px 30px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'right',
-            }}>
-                <InputText
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                    placeholder={"Filter"}
-                    style={{width: '40%', height: '37px'}}
-                />
-            </div>
-        </div>
+                <p>Add Group</p>
+            </AddDiv>
+            {/*<FilterDiv>*/}
+            {/*    <CustomInputText value={filter} onChange={(e) => setFilter(e.target.value)} placeholder={"Filter"}/>*/}
+            {/*</FilterDiv>*/}
+        </HeaderWrapper>
     }
 
+    useEffect(() => {
+        if (!showAddGroupModal) getGroupsApi().then()
+    }, [showAddGroupModal]);
 
     return (
         <>
-            <p style={{
-                width: '100%',
-                textAlign: 'left',
-                padding: '0 30px',
-                fontSize: '30px',
-                fontWeight: 'bold'
-            }}>Groups</p>
+            <PageHeaderParagraph>Groups</PageHeaderParagraph>
             <div className="card">
                 <DataTable value={groups} tableStyle={{minWidth: '50rem'}} header={header} style={{padding: '0 30px'}}>
                     <Column field="username" header="username" body={userBodyTemplate}></Column>
                 </DataTable>
             </div>
+            <GroupModal
+                setShowAddGroupModal={setShowAddGroupModal}
+                showAddGroupModal={showAddGroupModal}
+                addGroupData={addGroupData} setAddGroupData={setAddGroupData}
+                selectedGroup={detailedModal !== '' ? groups.find(group => group.username === detailedModal) : {}}
+            />
         </>
     );
 };

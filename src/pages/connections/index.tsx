@@ -1,152 +1,173 @@
-import React, {useState} from 'react';
-import {InputText} from "primereact/inputtext";
-import {CiFilter} from "react-icons/ci";
+import {useEffect, useState} from 'react';
 import {FaPlus} from "react-icons/fa";
-import {Card} from "primereact/card";
+import styled from 'styled-components'
+import {deleteConnectionApi, listConnectionsApi} from "../../api/connectionsApi.ts";
+import {DataTable} from "primereact/datatable";
+import {Column} from "primereact/column";
+import moment from "moment";
+import NewConnectionDialog from "./newConnectionDialog.tsx";
+
+import {FaTrash} from "react-icons/fa";
+import {MdEdit} from "react-icons/md";
 import {Dialog} from "primereact/dialog";
+import {Button} from "primereact/button";
+import {useNavigate} from "react-router-dom";
+
+const Title = styled('p')`
+  width: 100%;
+  text-align: left;
+  padding: 0 30px;
+  font-size: 30px;
+  font-weight: bold;
+`
+const HeaderWrapper = styled('div')`
+  width: 100%;
+  padding: 10px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: left;
+`
+const NewConnectionButton = styled('div')`
+  width: 25%;
+  height: 40px;
+  border-radius: 10px;
+  box-shadow: 0 1px 2px #d3d3d3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 10px;
+  cursor: pointer;
+  background: white;
+  font-size: 16px;
+
+  svg {
+    font-size: 17px;
+    margin-right: 5px;
+  }
+`
+const ActionWrapperDiv = styled('div')`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 60%;
+
+  svg {
+    cursor: pointer;
+  }
+`
+const ConnectButton = styled(Button)`
+  height: 25px;
+  box-shadow: 0 1px 2px #cccccc
+`
+
 
 const Connections = () => {
 
-    const [filter, setFilter] = useState('')
-    const [modalVisible, setModalVisible] = useState(false)
+    const navigate = useNavigate()
 
+    const [deleteConfirm, setDeleteConfirm] = useState(false)
+    const [connections, setConnections] = useState<{
+        [key: string]: {
+            name: string,
+            protocol: string,
+            identifier: string,
+            lastActive: number,
+            activeConnections: number
+        }
+    }[]>([])
+    const [identifier, setIdentifier] = useState('')
+    const [newConnectionModal, setNewConnectionModal] = useState(false)
+
+    const fetchConnectionsList = async () => {
+        const res = await listConnectionsApi()
+        if (res.status === 200) {
+            setConnections(res.data.childConnections)
+        }
+    }
+
+    const handleLastActive = (value: { lastActive: number }) => {
+        if (!value.lastActive) return '----'
+        else return moment.unix(value.lastActive / 1000).format('YYYY/MM/DD HH:mm')
+    }
+
+    const handleDeleteConnection = async (id: string) => {
+        const res = await deleteConnectionApi(id)
+        if (res.status === 204) {
+            fetchConnectionsList().then()
+            setDeleteConfirm(false)
+        }
+    }
+
+    const handleActions = (value: { identifier: string, name: string }) => {
+        return <ActionWrapperDiv>
+            <div onClick={() => {
+                setIdentifier(value.identifier)
+                setDeleteConfirm(true)
+            }}>
+                <FaTrash style={{color: '#FE4A49'}}/>
+            </div>
+            <MdEdit
+                onClick={() => {
+                    setNewConnectionModal(true)
+                    setIdentifier(value.identifier)
+                }}
+                style={{fontSize: '20px', color: '#40798C'}}
+            />
+            <ConnectButton onClick={() => {
+                navigate(`/panel/terminal/${value.name}/${value.identifier}`)
+            }}>Connect</ConnectButton>
+        </ActionWrapperDiv>
+    }
+
+    const tableHeader = () => {
+        return <NewConnectionButton onClick={() => {
+            setIdentifier('')
+            setNewConnectionModal(true)
+        }}>
+            <FaPlus/>
+            <p>New Connection</p>
+        </NewConnectionButton>
+    }
+
+
+    useEffect(() => {
+        if (!newConnectionModal) {
+            fetchConnectionsList().then()
+        }
+    }, [newConnectionModal]);
+
+    const Header = () => {
+        return <HeaderWrapper>
+        </HeaderWrapper>
+    }
 
     return (
         <>
-            <p style={{
-                width: '100%',
-                textAlign: 'left',
-                padding: '0 30px',
-                fontSize: '30px',
-                fontWeight: 'bold'
-            }}>Connections</p>
-            <div style={{
-                width: '100%',
-                padding: '10px 30px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'left'
-            }}>
-                <InputText
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                    placeholder={"Filter"}
-                    style={{width: '40%', height: '40px'}}
-                />
-                <div style={{
-                    width: '15%',
-                    height: '40px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '5px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginLeft: '10px',
-                    cursor: 'pointer',
-                    background: 'white'
-                }}>
-                    <CiFilter style={{fontSize: '25px'}}/>
-                    <p>Filter</p>
-                </div>
-                <div style={{
-                    width: '15%',
-                    height: '40px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '5px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginLeft: '10px',
-                    cursor: 'pointer',
-                    background: 'white'
-                }}>
-                    <FaPlus style={{fontSize: '20px', marginRight: '5px'}}/>
-                    <p>New Connection</p>
-                </div>
-            </div>
-            <div style={{padding: '10px 30px'}}>
-                <Card title={"Ubuntu"} style={{width: '20%', marginRight: '10px'}}>
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: "center",
-                        width: '90%',
-                        height: '30px',
-                        margin: '0px auto 0 auto',
-                        background: '#67BFE0',
-                        borderRadius: '5px',
-                        color: 'white',
-                        cursor: 'pointer'
-                    }}
-                         onClick={() => setModalVisible(true)}
-                    >
-                        <p>Details</p>
+            <Title>Connections</Title>
+            <Header/>
+            <div style={{padding: '10px 30px', position: 'relative'}}>
+                <DataTable value={connections} header={tableHeader} tableStyle={{minWidth: '50rem'}}>
+                    <Column field="name" header="name"></Column>
+                    <Column field="protocol" header="protocol"></Column>
+                    <Column field="activeConnections" header="activeConnections"></Column>
+                    <Column field="lastActive" header="lastActive" body={handleLastActive}></Column>
+                    <Column field="actions" header="actions" body={handleActions}></Column>
+                </DataTable>
+                <Dialog onHide={() => setDeleteConfirm(false)} visible={deleteConfirm} header={'Delete Connection'}>
+                    <div>Are you sure About Deleting this connection?</div>
+                    <div
+                        style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '20px'}}>
+                        <Button onClick={() => handleDeleteConnection(identifier)}>Confirm</Button>
+                        <Button severity="danger" onClick={() => setDeleteConfirm(false)}>Cancel</Button>
                     </div>
-                </Card>
-                <Dialog
-                    onHide={() => setModalVisible(false)}
-                    visible={modalVisible}
-                    style={{width: '450px'}}
-                    header={"Ubuntu"}
-                >
-                    <Card style={{width: '100%', boxShadow: 'unset'}}>
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            width: '90%',
-                            margin: 'auto'
-                        }}>
-                            <p>Start Time</p>
-                            <span>14-2-2022</span>
-                        </div>
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            width: '90%',
-                            margin: 'auto'
-                        }}>
-                            <p>Duration</p>
-                            <span>5 min</span>
-                        </div>
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            width: '90%',
-                            margin: 'auto'
-                        }}>
-                            <p>Remote Host</p>
-                            <span>1.1.1.1</span>
-                        </div>
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            width: '90%',
-                            margin: 'auto'
-                        }}>
-                            <p>Connection Name</p>
-                            <span>Ubuntu</span>
-                        </div>
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: "center",
-                            width: '90%',
-                            height: '40px',
-                            margin: '20px auto 0 auto',
-                            background: '#67BFE0',
-                            borderRadius: '5px',
-                            color: 'white'
-
-                        }}>
-                            <p>Logs</p>
-                        </div>
-                    </Card>
                 </Dialog>
             </div>
+            <NewConnectionDialog
+                newConnectionModal={newConnectionModal}
+                setNewConnectionModal={setNewConnectionModal}
+                //@ts-ignore
+                data={connections ? connections.filter(connection => connection.identifier === identifier) : []}
+            />
         </>
     );
 };

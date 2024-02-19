@@ -1,30 +1,21 @@
-import express from 'express';
-import { createProxyMiddleware } from 'http-proxy-middleware';
+import express from "express";
+import httpProxy from 'http-proxy'
 import cors from 'cors'
+
 const app = express();
+app.use(cors());
+const proxy = httpProxy.createProxyServer();
 
-// CORS middleware
-app.use(cors())
-app.use((req, res, next) => {
-    // Set the CORS headers
-    // res.header('Access-Control-Allow-Origin', '*');
-    // res.header('Access-Control-Allow-Methods', 'GET POST PUT DELETE OPTIONS PATCH'); // Add the methods you need
-    // res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    // Continue to the next middleware
-    next();
+// Define the target URL of your Guacamole back-end server
+const targetUrl = 'http://localhost:80';
+
+// Define a route that will forward requests to the Guacamole back-end server
+app.all('/guacamole/*', (req, res) => {
+    proxy.web(req, res, { target: targetUrl });
 });
 
-// Define a proxy route
-const apiProxy = createProxyMiddleware('/api', {
-    target: 'http://localhost:8080', // Replace with the actual API server URL
-    changeOrigin: true,
-});
-
-// Use the proxy route
-app.use('/api', apiProxy);
-
-// Start the proxy server
-const port = 3000; // You can choose any available port
+// Start the proxy server on a port of your choice
+const port = 3000;
 app.listen(port, () => {
-    console.log(`Proxy server is running on http://localhost:${port}`);
+    console.log(`Proxy server is running on port ${port}`);
 });
