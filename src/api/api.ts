@@ -158,7 +158,7 @@ export const fetchSelectedGroupMembers = (name: string) => {
         params: {"token": localStorage.getItem("token")},
     })
 }
-export const fetchEffectivePermissions = () => {
+export const fetchEffectivePermissionsApi = () => {
     return api.get(`/api/session/data/mysql/self/effectivePermissions`, {
         params: {"token": localStorage.getItem("token")},
     })

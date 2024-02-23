@@ -19,6 +19,7 @@ const Login = () => {
                 const res = await loginApi(username, password)
                 if (res.data.authToken) {
                     localStorage.setItem('token', res.data.authToken)
+                    localStorage.setItem('user', username)
                     navigate('/panel/dashboard')
                 }
             }

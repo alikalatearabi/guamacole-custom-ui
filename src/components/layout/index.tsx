@@ -1,15 +1,15 @@
 import {MegaMenu} from "primereact/megamenu";
-import {items} from "../../pages/dashboard/menuItems.ts";
 import * as React from "react";
 import {ReactNode, useRef} from "react";
 import {CiSettings} from "react-icons/ci";
 import styled from 'styled-components'
 import './style.scss'
-import {useLocation, useNavigate, useParams} from "react-router-dom";
+import {Link, useLocation, useNavigate, useParams} from "react-router-dom";
 import {Button} from "primereact/button";
 import {activeConnectionsApi, killConnectionsApi} from "../../api/activeConnections.ts";
 import {Menu} from "primereact/menu";
 import {LogoutApi} from "../../api/api.ts";
+import {MenuItem} from "primereact/menuitem";
 
 
 const MainDiv = styled('div')`
@@ -47,12 +47,27 @@ const NavbarTitle = styled('p')`
   margin: 0;
   border-radius: 10px 10px 0 0;
 `
-const CustomMegaMenu = styled(MegaMenu)`
+const CustomMegaMenu = styled('div')`
   width: 100%;
   height: 100%;
   background: #44679C;
   border-radius: 0 0 10px 10px;
-  border: 0
+  border: 0;
+
+  .active {
+    background-color: #a7a5ff;
+  }
+`
+const MenuLink = styled('div')`
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  padding: 15px;
+  a{
+    color: white;
+    text-decoration: none;
+    font-size: 18px;
+  }
 `
 const BodySection = styled('div')`
   display: flex;
@@ -87,32 +102,43 @@ const HeaderInfoSection = styled('div')`
 const HeaderFilterSection = styled('div')`
 `
 
-const megaMenuProps: {
-    orientation: 'vertical',
-    [key: string]: unknown
-} = {
-    model: items,
-    orientation: 'vertical',
-    breakpoint: "767px",
-    pt: {
-        label: {style: {color: 'white'}},
-        icon: {style: {color: 'white'}},
-        menuitem: {style: {width: '95%', margin: "auto"}, className: 'custom-menu-item'},
-    }
-}
-
+const subMenuItems = [
+    {
+        label: 'Home',
+        url: '/panel/dashboard'
+    },
+    {
+        label: 'Active Connections',
+        url: '/panel/active'
+    },
+    {
+        label: 'History',
+        url: '/panel/history'
+    },
+    {
+        label: 'Users',
+        url: '/panel/users'
+    },
+    {
+        label: 'Groups',
+        url: '/panel/groups'
+    },
+    {
+        label: 'Connections',
+        url: '/panel/connections'
+    },
+]
 
 const navbarTitle = 'سامانه جامع مدیریت سرور'
 
-const Layout: React.FC<{
-    children: ReactNode
-}> = ({children}) => {
+const Layout: React.FC<{ children: ReactNode }> = ({children}) => {
 
     const {pathname} = useLocation()
     const {id} = useParams()
     const navigate = useNavigate()
     const menuLeft = useRef(null);
     const token = localStorage.getItem("token")
+    const username = localStorage.getItem("user")
 
     const handleLogout = async () => {
         if (token) {
@@ -121,6 +147,7 @@ const Layout: React.FC<{
                 navigate('/login')
                 localStorage.removeItem('token')
                 localStorage.removeItem('GUAC_HISTORY')
+                localStorage.removeItem('user')
             }
         }
     }
@@ -177,7 +204,11 @@ const Layout: React.FC<{
         <NavbarSection>
             <NavbarSectionItems>
                 <NavbarTitle>{navbarTitle}</NavbarTitle>
-                <CustomMegaMenu {...megaMenuProps}/>
+                <CustomMegaMenu>
+                    {subMenuItems.map(menu => <MenuLink key={menu.label} className={pathname === menu.url && 'active'}>
+                        <Link to={menu.url}>{menu.label}</Link>
+                    </MenuLink>)}
+                </CustomMegaMenu>
             </NavbarSectionItems>
         </NavbarSection>
         <BodySection>
@@ -186,7 +217,7 @@ const Layout: React.FC<{
                 <HeaderInfoSection onClick={(event) => menuLeft.current?.toggle(event)}>
                     {/* ts-ignore*/}
                     <Menu model={menuItems} popup ref={menuLeft} id="popup_menu_right"/>
-                    <span>Bakhshande</span>
+                    <span>{username}</span>
                     <CiSettings style={{marginRight: '10px', fontSize: '26px'}}/>
                 </HeaderInfoSection>
                 <HeaderFilterSection>

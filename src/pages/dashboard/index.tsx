@@ -5,6 +5,9 @@ import {listConnectionsApi} from "../../api/connectionsApi.ts";
 import styled from 'styled-components'
 import {IoMdArrowDropright} from "react-icons/io";
 import {Link} from "react-router-dom";
+import {fetchEffectivePermissionsApi} from "../../api/api.ts";
+import {useRecoilState, useSetRecoilState} from "recoil";
+import {permissionAtom} from "../../recoil/atom/permissionAtom.ts";
 
 const ConnectionItem = styled(Link)`
   display: flex;
@@ -18,6 +21,9 @@ const RecentConnectionImage = styled('img')`
 `
 
 const Dashboard = () => {
+
+    const [permissionsAtom ,setPermissionsAtom] = useRecoilState(permissionAtom)
+
     const recent = JSON.parse(localStorage.getItem('GUAC_HISTORY'))
     const [recentImageUrl, setRecentImageUrl] = useState('');
     const [recentConnectionName, setRecentConnectionName] = useState('')
@@ -47,11 +53,22 @@ const Dashboard = () => {
             setRecentImageUrl(url);
         }
     }
+    const fetchEffectivePermissions = async () => {
+        const res = await fetchEffectivePermissionsApi()
+        if (res.status === 200) {
+            setPermissionsAtom(()=> ({
+                systemPermissions: res.data.systemPermissions,
+                userPermissions: res.data.userPermissions
+            }))
+        }
+    }
 
     useEffect(() => {
         fetchListConnections().then()
         fetchRecentConnection()
+        fetchEffectivePermissions().then()
     }, []);
+
 
     return (
         <div style={{width: '100%', height: '100%'}} id={'connection_body'}>

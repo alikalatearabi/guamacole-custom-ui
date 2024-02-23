@@ -9,6 +9,8 @@ import AddUserModal from "./addUserModal.tsx";
 import styled from "styled-components";
 import {unixToUTC} from "./utils.ts";
 import {UsersData} from "./types.ts";
+import {useRecoilState, useRecoilValue} from "recoil";
+import {permissionAtom} from "../../recoil/atom/permissionAtom.ts";
 
 const CustomDataTable = styled(DataTable)`
   .p-datatable-wrapper {
@@ -50,6 +52,12 @@ const HeaderTitle = styled('p')`
 
 const Users = () => {
 
+    const permissionsAtom = useRecoilValue(permissionAtom)
+
+    useEffect(() => {
+        console.log(permissionsAtom)
+    }, [permissionsAtom]);
+
     const [users, setUsers] = useState<UsersData[]>([]);
     const [editUserModal, setEditUserModal] = useState<boolean>(false)
     const [addUserModal, setAddUserModal] = useState<boolean>(false)
@@ -87,25 +95,25 @@ const Users = () => {
     }
 
     const header = () => {
-        return <HeaderWrapper>
-            <AddUserButton onClick={() => setAddUserModal(true)}>
-                <FaPlus/>
-                <p>Add User</p>
-            </AddUserButton>
-        </HeaderWrapper>
+            return <HeaderWrapper>
+                <AddUserButton onClick={() => setAddUserModal(true)}>
+                    <FaPlus/>
+                    <p>Add User</p>
+                </AddUserButton>
+            </HeaderWrapper>
     }
 
     const dataTableProps = {
         value: users,
-        tableStyle: { minWidth: '50rem' },
+        tableStyle: {minWidth: '50rem'},
         header: header,
-        style: { padding: '0 30px' }
+        style: {padding: '0 30px'}
     };
 
     const editUserModalProps = {
         setModal: setEditUserModal,
         modal: editUserModal,
-        data : users.find(user => user.username === modalId)
+        data: users.find(user => user.username === modalId)
     }
 
     return (
