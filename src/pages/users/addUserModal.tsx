@@ -13,7 +13,7 @@ import {Toast} from 'primereact/toast';
 import {AddUserModalProps, PermissionsType} from "./types.ts";
 import styled from "styled-components";
 import moment from "moment";
-import {addUserApi} from "../../api/api.ts";
+import {addUserApi, addUserPermissionsApi} from "../../api/api.ts";
 
 const CustomDialog = styled(Dialog)`
   width: 1000px
@@ -90,21 +90,6 @@ const CustomButton = styled(Button)`
   font-size: 18px
 `
 
-const strToDate = (dateString: string) => {
-    const timeString = dateString;
-    const currentDate = new Date();
-    const timeParts = timeString?.split(":");
-    if (timeParts) {
-        const hours = parseInt(timeParts[0], 10);
-        const minutes = parseInt(timeParts[1], 10);
-        const seconds = parseInt(timeParts[2], 10);
-        currentDate.setHours(hours);
-        currentDate.setMinutes(minutes);
-        currentDate.setSeconds(seconds);
-        return currentDate.toTimeString().split(' ')[0]
-    }
-}
-
 const AddUsersModal: React.FC<AddUserModalProps> = ({setModal, modal}) => {
 
     const toast = useRef<Toast>(null);
@@ -137,9 +122,49 @@ const AddUsersModal: React.FC<AddUserModalProps> = ({setModal, modal}) => {
                 "guac-email-address": permissions["guac-email-address"]
             }
         }
-        // const permissionData = []
         const res = await addUserApi(data)
-        console.log(res)
+0
+        const permissionsData = []
+        if (permissions.ADMINISTER) permissionsData.push({
+            op: 'add',
+            path: '/systemPermissions',
+            value: 'ADMINISTER'
+        })
+        if (permissions.CREATE_USER) permissionsData.push({
+            op: 'add',
+            path: '/systemPermissions',
+            value: 'CREATE_USER'
+        })
+        if (permissions.CREATE_USER_GROUP) permissionsData.push({
+            op: 'add',
+            path: '/systemPermissions',
+            value: 'CREATE_USER_GROUP'
+        })
+        if (permissions.CREATE_CONNECTION) permissionsData.push({
+            op: 'add',
+            path: '/systemPermissions',
+            value: 'CREATE_CONNECTION'
+        })
+        if (permissions.CREATE_CONNECTION_GROUP) permissionsData.push({
+            op: 'add',
+            path: '/systemPermissions',
+            value: 'CREATE_CONNECTION_GROUP'
+        })
+        if (permissions.CREATE_SHARING_PROFILE) permissionsData.push({
+            op: 'add',
+            path: '/systemPermissions',
+            value: 'CREATE_SHARING_PROFILE'
+        })
+        if (permissions.changePassword) permissionsData.push({
+            op: 'add',
+            path: `/userPermissions/${permissions.username}`,
+            value: 'UPDATE'
+        })
+        const permissionRes = await addUserPermissionsApi(permissionsData, permissions.username)
+
+        if (res.status === 200 && permissionRes.status === 204){
+            setModal(false)
+        }
     }
     const profileSection = () => {
         return <>
@@ -371,7 +396,7 @@ const AddUsersModal: React.FC<AddUserModalProps> = ({setModal, modal}) => {
     }
 
     return (
-        <CustomDialog onHide={() => setModal(false)} visible={modal} header={"Edit User"}>
+        <CustomDialog onHide={() => setModal(false)} visible={modal} header={"Add User"}>
             <Toast ref={toast}/>
             <Accordion multiple activeIndex={[0, 1]}>
                 <AccordionTab header={"Profile"}>

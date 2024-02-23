@@ -3,11 +3,12 @@ import {DataTable} from 'primereact/datatable';
 import {Column} from 'primereact/column';
 import {FaUserAlt} from "react-icons/fa";
 import {FaPlus} from "react-icons/fa";
-import {InputText} from "primereact/inputtext";
 import {fetchUsersApi} from "../../api/api.ts";
 import EditUsersModal from "./editUsersModal.tsx";
 import AddUserModal from "./addUserModal.tsx";
 import styled from "styled-components";
+import {unixToUTC} from "./utils.ts";
+import {UsersData} from "./types.ts";
 
 const CustomDataTable = styled(DataTable)`
   .p-datatable-wrapper {
@@ -18,41 +19,41 @@ const CustomDataTable = styled(DataTable)`
     border-radius: 10px 10px 0 0;
   }
 `
+const HeaderWrapper = styled('div')`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+`
+const AddUserButton = styled('div')`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 10%;
+  background: #DDF1F8;
+  padding: 5px 20px;
+  border-radius: 5px;
+  box-shadow: 0 1px 2px #cacaca;
+  cursor: pointer;
 
-export interface UsersData {
-    username: string,
-    lastActive: string,
-    attributes: {
-        "access-window-end": string,
-        "access-window-start": string,
-        disabled: string,
-        expired: string,
-        "guac-email-address": string,
-        "guac-full-name": string,
-        "guac-organization": string,
-        "guac-organizational-role": string,
-        timezone: string,
-        "valid-from": string,
-        "valid-until": string
-    }
-}
+  p {
+    margin: 0
+  }
+`
+const HeaderTitle = styled('p')`
+  width: 100%;
+  text-align: left;
+  padding: 0 30px;
+  font-size: 30px;
+  font-weight: bold
+`
 
 const Users = () => {
 
-    const [filter, setFilter] = useState('')
     const [users, setUsers] = useState<UsersData[]>([]);
-    const [filteredUsers, setFilteredUsers] = useState<UsersData[]>([]);
     const [editUserModal, setEditUserModal] = useState<boolean>(false)
-    const [addUserModal, setAddEditUserModal] = useState<boolean>(false)
+    const [addUserModal, setAddUserModal] = useState<boolean>(false)
     const [modalId, setModalId] = useState('')
-
-    const unixToUTC = (unix: string) => {
-        if (unix) {
-            const date = new Date(unix)
-            return date.toUTCString()
-        } else return '----'
-
-    }
 
     useEffect(() => {
         const getAllUsers = async () => {
@@ -65,15 +66,8 @@ const Users = () => {
                 })))
             }
         }
-        getAllUsers().then()
-    }, []);
-
-    useEffect(() => {
-        if (filter !== '') {
-            const filtered = users.filter(user => user.username.includes(filter))
-            setFilteredUsers(filtered)
-        } else setFilteredUsers([])
-    }, [filter]);
+        if (!addUserModal && !editUserModal) getAllUsers().then()
+    }, [addUserModal, editUserModal]);
 
     const userBodyTemplate = (rowData: UsersData) => {
         return (
@@ -93,66 +87,37 @@ const Users = () => {
     }
 
     const header = () => {
-        return <div style={{display: 'flex', alignItems: "center", justifyContent: 'space-between', width: '100%'}}>
-            <div
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    width: '10%',
-                    background: '#DDF1F8',
-                    padding: '5px 20px',
-                    borderRadius: '5px',
-                    boxShadow: '0 1px 2px #cacaca',
-                    cursor: 'pointer'
-                }}
-                onClick={() => setAddEditUserModal(true)}
-            >
+        return <HeaderWrapper>
+            <AddUserButton onClick={() => setAddUserModal(true)}>
                 <FaPlus/>
-                <p style={{margin: '0'}}>Add User</p>
-            </div>
-            <div style={{
-                width: '90%',
-                padding: '10px 30px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'right',
-            }}>
-                <InputText
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                    placeholder={"Filter"}
-                    style={{width: '40%', height: '37px'}}
-                />
-            </div>
-        </div>
+                <p>Add User</p>
+            </AddUserButton>
+        </HeaderWrapper>
     }
 
+    const dataTableProps = {
+        value: users,
+        tableStyle: { minWidth: '50rem' },
+        header: header,
+        style: { padding: '0 30px' }
+    };
+
+    const editUserModalProps = {
+        setModal: setEditUserModal,
+        modal: editUserModal,
+        data : users.find(user => user.username === modalId)
+    }
 
     return (
         <>
-            <p style={{
-                width: '100%',
-                textAlign: 'left',
-                padding: '0 30px',
-                fontSize: '30px',
-                fontWeight: 'bold'
-            }}>Users</p>
+            <HeaderTitle>Users</HeaderTitle>
             <div className="card">
-                <CustomDataTable
-                    value={filteredUsers.length ? filteredUsers : users}
-                    tableStyle={{minWidth: '50rem'}}
-                    header={header} style={{padding: '0 30px'}}
-                >
+                <CustomDataTable {...dataTableProps}>
                     <Column field="username" header="username" body={userBodyTemplate}></Column>
                     <Column field="lastActive" header="last active"></Column>
                 </CustomDataTable>
-                <EditUsersModal
-                    setModal={setEditUserModal}
-                    modal={editUserModal}
-                    data={users.find(user => user.username === modalId)}
-                />
-                <AddUserModal modal={addUserModal} setModal={setAddEditUserModal}/>
+                <EditUsersModal {...editUserModalProps}/>
+                <AddUserModal modal={addUserModal} setModal={setAddUserModal}/>
             </div>
         </>
     );
