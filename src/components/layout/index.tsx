@@ -10,6 +10,8 @@ import {activeConnectionsApi, killConnectionsApi} from "../../api/activeConnecti
 import {Menu} from "primereact/menu";
 import {LogoutApi} from "../../api/api.ts";
 import {MenuItem} from "primereact/menuitem";
+import {useRecoilValue} from "recoil";
+import {permissionAtom} from "../../recoil/atom/permissionAtom.ts";
 
 
 const MainDiv = styled('div')`
@@ -132,6 +134,8 @@ const subMenuItems = [
 const navbarTitle = 'سامانه جامع مدیریت سرور'
 
 const Layout: React.FC<{ children: ReactNode }> = ({children}) => {
+
+    const permissions = useRecoilValue(permissionAtom)
 
     const {pathname} = useLocation()
     const {id} = useParams()

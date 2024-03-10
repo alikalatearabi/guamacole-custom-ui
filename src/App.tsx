@@ -11,9 +11,17 @@ import Login from "./pages/login";
 import Terminal from "./pages/terminal";
 import PrivateRoute from "./components/router/privateRoute.tsx";
 import 'primeicons/primeicons.css';
+import {fetchEffectivePermissionsApi} from "./api/api.ts";
+import {useRecoilState} from "recoil";
+import {permissionAtom} from "./recoil/atom/permissionAtom.ts";
+import {useEffect} from "react";
+import AccessDenied from "./components/accessDenied/accessDenied.tsx";
 
 
 function App() {
+
+    const [permissionsAtom ,setPermissionsAtom] = useRecoilState(permissionAtom)
+
 
     function NoMatch() {
         const location = useLocation();
@@ -25,6 +33,20 @@ function App() {
             </div>
         );
     }
+
+    const fetchEffectivePermissions = async () => {
+        const res = await fetchEffectivePermissionsApi()
+        if (res.status === 200) {
+            setPermissionsAtom(()=> ({
+                systemPermissions: res.data.systemPermissions,
+                userPermissions: res.data.userPermissions
+            }))
+        }
+    }
+
+    useEffect(() => {
+        fetchEffectivePermissions().then()
+    }, []);
 
     return (
         <div style={{width: '100%', height: '100%'}}>
@@ -38,6 +60,7 @@ function App() {
                     <Route path={'/panel/groups'} element={<Groups/>}/>
                     <Route path={'/panel/connections'} element={<Connections/>}/>
                     <Route path={'/panel/terminal/:name/:id'} element={<Terminal/>}/>
+                    <Route path={'/panel/accessdenied'} element={<AccessDenied/>}/>
                 </Route>
                 <Route path="/" element={<Navigate to="/panel/dashboard"/>}/>
                 <Route path="*" element={<NoMatch />} />

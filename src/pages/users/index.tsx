@@ -9,7 +9,7 @@ import AddUserModal from "./addUserModal.tsx";
 import styled from "styled-components";
 import {unixToUTC} from "./utils.ts";
 import {UsersData} from "./types.ts";
-import {useRecoilState, useRecoilValue} from "recoil";
+import {useRecoilValue} from "recoil";
 import {permissionAtom} from "../../recoil/atom/permissionAtom.ts";
 
 const CustomDataTable = styled(DataTable)`
@@ -52,11 +52,7 @@ const HeaderTitle = styled('p')`
 
 const Users = () => {
 
-    const permissionsAtom = useRecoilValue(permissionAtom)
-
-    useEffect(() => {
-        console.log(permissionsAtom)
-    }, [permissionsAtom]);
+    const permissions = useRecoilValue(permissionAtom)
 
     const [users, setUsers] = useState<UsersData[]>([]);
     const [editUserModal, setEditUserModal] = useState<boolean>(false)
@@ -95,12 +91,14 @@ const Users = () => {
     }
 
     const header = () => {
+        if (permissions.systemPermissions.includes('CREATE_USER')) {
             return <HeaderWrapper>
                 <AddUserButton onClick={() => setAddUserModal(true)}>
                     <FaPlus/>
                     <p>Add User</p>
                 </AddUserButton>
             </HeaderWrapper>
+        }
     }
 
     const dataTableProps = {
